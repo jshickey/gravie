@@ -35,3 +35,6 @@ gravie-*.tar
 npm-debug.log
 /assets/node_modules/
 
+
+# don't checkin secrets
+**/*.secret.exs

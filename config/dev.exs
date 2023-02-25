@@ -1,4 +1,5 @@
 import Config
+import_config "dev.secret.exs"
 
 # Configure your database
 config :gravie, Gravie.Repo,
@@ -77,3 +78,5 @@ config :phoenix, :plug_init_mode, :runtime
 
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false
+
+config :gravie, gb_api_key: true
