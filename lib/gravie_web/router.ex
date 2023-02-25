@@ -17,7 +17,9 @@ defmodule GravieWeb.Router do
   scope "/", GravieWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live "/", SearchLive
+    live "/search", SearchLive
+    # get "/", PageController, :home
   end
 
   # Other scopes may use custom stacks.

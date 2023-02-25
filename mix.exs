@@ -52,7 +52,9 @@ defmodule Gravie.MixProject do
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
       # app specific dependencies
-      {:tesla, "~> 1.4"}
+      {:tesla, "~> 1.4"},
+      # static code analysis
+      {:credo, "~> 1.6", only: [:dev, :test], runtime: false}
     ]
   end
 
