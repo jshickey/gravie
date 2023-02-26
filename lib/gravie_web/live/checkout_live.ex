@@ -2,20 +2,18 @@ defmodule GravieWeb.CheckoutLive do
   use GravieWeb, :live_view
 
   def mount(_params, session, socket) do
-    IO.inspect(session, label: "CHECKOUT:MOUNT:SESSION")
-
-    cart = Map.get(session, "cart")
+    session_id = Map.get(session, :__sid__)
+    IO.inspect(session_id, label: "SEARCH:MOUNT:SESSION_ID")
+    {:ok, session_cart} = Cachex.get(:gravie_cache, session_id)
+    cart = if session_cart && session_id do session_cart else MapSet.new() end
     IO.inspect(cart, label: "CHECKOUT:MOUNT:CART_FROM_SESSION")
+
 
     socket =
       assign(socket,
+        session_id: session_id,
         cart: cart
       )
-
-    socket =
-        socket
-        |> PhoenixLiveSession.maybe_subscribe(session)
-        |> put_session_assigns(session)
 
     {:ok, socket}
   end
@@ -141,8 +139,8 @@ defmodule GravieWeb.CheckoutLive do
 
     IO.inspect(updated_cart, label: "CHECKOUT:remove_from_cart:updated_cart")
 
-    PhoenixLiveSession.put_session(socket, "cart", updated_cart)
-    IO.puts("done with  PhoenixLiveSession.put_session(socket, \"cart\", updated_cart)")
+    Cachex.put(:gravie_cache, socket.assigns.session_id, updated_cart)
+    IO.puts("done with updating Cachex.cache")
 
     socket =
       assign(socket,

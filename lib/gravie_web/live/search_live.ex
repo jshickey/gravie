@@ -3,20 +3,22 @@ defmodule GravieWeb.SearchLive do
   use GravieWeb, :live_view
 
   def mount(_params, session, socket) do
-    cart = Map.get(session, "cart", MapSet.new())
+    session_id = Map.get(session, :__sid__)
+    IO.inspect(session_id, label: "SEARCH:MOUNT:SESSION_ID")
+
+    {:ok, session_cart} = Cachex.get(:gravie_cache, session_id)
+    cart = if session_cart && session_id do session_cart else MapSet.new() end
+    IO.inspect(cart, label: "SEARCH:MOUNT:CART")
+
 
     socket =
       assign(socket,
         query: "",
         results: [],
         loading: false,
-        cart: cart
+        cart: cart,
+        session_id: session_id
       )
-
-    socket =
-      socket
-      |> PhoenixLiveSession.maybe_subscribe(session)
-      |> put_session_assigns(session)
 
     {:ok, socket}
   end
@@ -195,7 +197,10 @@ defmodule GravieWeb.SearchLive do
     game = Enum.find(socket.assigns.results, &(&1.guid == guid))
 
     updated_cart = MapSet.put(socket.assigns.cart, game)
-    PhoenixLiveSession.put_session(socket, "cart", updated_cart)
+    IO.inspect(updated_cart, label: "ADD_TO_CART:UPDATED_CART:ADDING TO SESSION")
+    IO.inspect(socket.assigns.session_id, label: "ADD_TO_CART:UPDATED_CART:SESSION_ID")
+
+    Cachex.put(:gravie_cache, socket.assigns.session_id, updated_cart)
 
     socket =
       assign(socket,

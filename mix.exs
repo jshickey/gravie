@@ -55,6 +55,7 @@ defmodule Gravie.MixProject do
       {:tesla, "~> 1.4"},
       {:dart_sass, "~> 0.5.1", runtime: Mix.env() == :dev},
       {:phoenix_live_session, "~> 0.1"},
+      {:cachex, "~> 3.6"},
 
       # static code analysis
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false}
