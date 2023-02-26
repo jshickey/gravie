@@ -28,36 +28,20 @@ defmodule GravieWeb.CheckoutLive do
 
   def render(assigns) do
     ~H"""
-    <.nav>
-      <%= MapSet.size(@cart) %>
-    </.nav>
+    <.nav><%= MapSet.size(@cart) %></.nav>
+    <h2>SHOPPING CART:</h2>
     <div>
+      <div :if={MapSet.size(@cart) == 0}>Shopping Cart is Empty</div>
       <div :if={@cart} class="grid gap-6 mb-8 md:grid-cols-2 xl:grid-cols-4">
         <%= for game <- @cart do %>
-          <div class="flex justify-center">
-            <div class="flex flex-col rounded-lg bg-white shadow-lg dark:bg-neutral-700 md:max-w-xl md:flex-row">
-              <img
-                class=" rounded-t-m object-cover md:w-48 md:rounded-none md:rounded-l-lg"
-                src={game.thumb}
-                alt={game.name}
-              />
-              <div class="flex-1 md:w-48 flex-col justify-start p-6">
-                <h5 class="mb-2 text-xl font-medium text-neutral-800 dark:text-neutral-50">
-                  <%= game.name %>
-                </h5>
-                <button
-                  phx-click="remove_from_cart"
-                  type="button"
-                  value={game.guid}
-                  class="inline-block rounded bg-primary px-6 pt-2.5 pb-2 text-xs font-medium uppercase leading-normal text-white shadow-[0_4px_9px_-4px_#3b71ca] transition duration-150 ease-in-out hover:bg-primary-600 hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:bg-primary-600 focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:outline-none focus:ring-0 active:bg-primary-700 active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)]"
-                  data-te-ripple-init
-                  data-te-ripple-color="light"
-                >
-                  Remove From Cart
-                </button>
-              </div>
-            </div>
-          </div>
+          <.game_card
+            thumb={game.thumb}
+            name={game.name}
+            guid={game.guid}
+            event_name="remove_from_cart"
+          >
+            Remove From Cart
+          </.game_card>
         <% end %>
       </div>
     </div>
@@ -83,6 +67,35 @@ defmodule GravieWeb.CheckoutLive do
   end
 
   # Function Components
+  def game_card(assigns) do
+    ~H"""
+    <div class="flex justify-center">
+      <div class="flex flex-col rounded-lg bg-white shadow-lg dark:bg-neutral-700 md:max-w-xl md:flex-row">
+        <img
+          class=" rounded-t-m object-cover md:w-48 md:rounded-none md:rounded-l-lg"
+          src={@thumb}
+          alt={@name}
+        />
+        <div class="flex-1 md:w-48 flex-col justify-start p-6">
+          <h5 class="mb-2 text-xl font-medium text-neutral-800 dark:text-neutral-50">
+            <%= @name %>
+          </h5>
+          <button
+            phx-click={@event_name}
+            type="button"
+            value={@guid}
+            class="inline-block rounded bg-primary px-6 pt-2.5 pb-2 text-xs font-medium uppercase leading-normal text-white shadow-[0_4px_9px_-4px_#3b71ca] transition duration-150 ease-in-out hover:bg-primary-600 hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:bg-primary-600 focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:outline-none focus:ring-0 active:bg-primary-700 active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)]"
+            data-te-ripple-init
+            data-te-ripple-color="light"
+          >
+            <%= render_slot(@inner_block) %>
+          </button>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
   def nav(assigns) do
     ~H"""
     <nav

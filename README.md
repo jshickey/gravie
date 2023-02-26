@@ -25,8 +25,7 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
 
 ## TODOs
 * Manage Tailwind CSS better
-    * encapsulate functionality in LiveView components
-    * use function components
+    * encapsulate Nav and Game Card into LiveView components
     * use @apply in app.css file
     * move nav bar from LiveView pages to Layouts
     * [Mike Clark combination of SASS and Tailwind](https://pragmaticstudio.com/tutorials/using-tailwind-css-in-phoenix)
