@@ -49,7 +49,7 @@ defmodule GravieWeb.SearchLive do
         <div class="flex justify-center">
           <div class="mb-3 xl:w-96">
             <div class="relative mb-4 flex w-full flex-wrap items-stretch">
-              <.search_input query={@query} loading={@loading}/>
+              <.search_input query={@query} loading={@loading} />
               <.search_button />
               <.spinner loading={@loading} />
             </div>
