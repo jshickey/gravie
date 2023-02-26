@@ -7,7 +7,8 @@ defmodule GravieWeb.SearchLive do
       assign(socket,
         query: "",
         results: [],
-        loading: false
+        loading: false,
+        cart: MapSet.new()
       )
 
     {:ok, socket}
@@ -17,7 +18,31 @@ defmodule GravieWeb.SearchLive do
     ~H"""
     <h1 class="sm:flex sm:justify-center">Search for Games</h1>
     <br />
-
+    <div>
+      <button
+        class="py-4 px-1 relative border-2 border-transparent text-gray-800 rounded-full hover:text-gray-400 focus:outline-none focus:text-gray-500 transition duration-150 ease-in-out"
+        aria-label="Cart"
+      >
+        <svg
+          class="h-6 w-6"
+          fill="none"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z">
+          </path>
+        </svg>
+        <span class="absolute inset-0 object-right-top -mr-6">
+          <div class="inline-flex items-center px-1.5 py-0.5 border-2 border-white rounded-full text-xs font-semibold leading-4 bg-red-500 text-white">
+            <%= MapSet.size(@cart) %>
+          </div>
+        </span>
+        Checkout
+      </button>
+    </div>
     <div id="search">
       <form phx-submit="search">
         <div class="flex justify-center">
@@ -85,7 +110,9 @@ defmodule GravieWeb.SearchLive do
                   <%= game.name %>
                 </h5>
                 <button
+                  phx-click="add_to_cart"
                   type="button"
+                  value={game.guid}
                   class="inline-block rounded bg-primary px-6 pt-2.5 pb-2 text-xs font-medium uppercase leading-normal text-white shadow-[0_4px_9px_-4px_#3b71ca] transition duration-150 ease-in-out hover:bg-primary-600 hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:bg-primary-600 focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:outline-none focus:ring-0 active:bg-primary-700 active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)]"
                   data-te-ripple-init
                   data-te-ripple-color="light"
@@ -99,6 +126,18 @@ defmodule GravieWeb.SearchLive do
       </div>
     </div>
     """
+  end
+
+  def handle_event("add_to_cart", %{"value" => guid}, socket) do
+    game = Enum.find(socket.assigns.results, &(&1.guid == guid))
+
+    socket =
+      assign(socket,
+        cart: MapSet.put(socket.assigns.cart, game)
+      )
+
+    IO.inspect(socket.assigns.cart, label: "cart")
+    {:noreply, socket}
   end
 
   def handle_info({:fetch_games, query}, socket) do

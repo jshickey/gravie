@@ -15,10 +15,10 @@ defmodule Gravie.GiantBombClient do
     {:ok, result} =
       get(
         "/games/?api_key=#{@api_key}" <>
-          "&filter=name:#{query}" <> "&format=json&field_list=name,image&limit=10"
+          "&filter=name:#{query}" <> "&format=json&field_list=name,image,guid&limit=10"
       )
 
     result.body["results"]
-    |> Enum.map(&%{name: &1["name"], thumb: &1["image"]["thumb_url"]})
+    |> Enum.map(&%{name: &1["name"], guid: &1["guid"], thumb: &1["image"]["thumb_url"]})
   end
 end
