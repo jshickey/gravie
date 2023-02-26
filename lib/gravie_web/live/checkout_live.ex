@@ -151,16 +151,5 @@ defmodule GravieWeb.CheckoutLive do
     {:noreply, socket}
   end
 
-  def handle_info({:live_session_updated, session}, socket) do
-    IO.inspect(session, label: "CHECKOUT:handle_info:live_session_updated:session")
-    {:noreply, put_session_assigns(socket, session)}
-  end
 
-  defp put_session_assigns(socket, session) do
-    IO.inspect(session, label: "CHECKOUT:put_session_assigns:session")
-    cart =  Map.get(session, "cart", MapSet.new())
-    IO.inspect(cart, label: "CHECKOUT:put_session_assigns:cart")
-
-    if cart do assign(socket, :cart, cart) else socket end
-  end
 end

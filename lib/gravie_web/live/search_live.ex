@@ -223,11 +223,6 @@ defmodule GravieWeb.SearchLive do
     {:noreply, socket}
   end
 
-  def handle_info({:live_session_updated, session}, socket) do
-    IO.inspect(session, label: "SEARCH:handle_info:live_session_updated")
-    {:noreply, put_session_assigns(socket, session)}
-  end
-
   def handle_info({:fetch_games, query}, socket) do
     socket =
       assign(socket,
@@ -236,13 +231,5 @@ defmodule GravieWeb.SearchLive do
       )
 
     {:noreply, socket}
-  end
-
-  defp put_session_assigns(socket, session) do
-    IO.inspect(session, label: "SEARCH:put_session_assigns:session")
-    cart =  Map.get(session, "cart", MapSet.new())
-    IO.inspect(cart, label: "SEARCH:put_session_assigns:cart")
-
-    socket |> assign(:cart, cart)
   end
 end
