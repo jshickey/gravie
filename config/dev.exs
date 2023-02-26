@@ -1,4 +1,5 @@
 import Config
+import_config "dev.secret.exs"
 
 # Configure your database
 config :gravie, Gravie.Repo,
@@ -26,7 +27,8 @@ config :gravie, GravieWeb.Endpoint,
   secret_key_base: "TnqKgTojh3hiP7N7r3FG4UgopWToM5kX+glPZ71tGoQ8M9DqHKuo4c3VIW7KP5ix",
   watchers: [
     esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},
-    tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]}
+    tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]},
+    sass: {DartSass, :install_and_run, [:default, ~w(--watch)]}
   ]
 
 # ## SSL Support
@@ -77,3 +79,5 @@ config :phoenix, :plug_init_mode, :runtime
 
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false
+
+config :gravie, gb_api_key: true

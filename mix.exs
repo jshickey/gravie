@@ -50,7 +50,15 @@ defmodule Gravie.MixProject do
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 0.20"},
       {:jason, "~> 1.2"},
-      {:plug_cowboy, "~> 2.5"}
+      {:plug_cowboy, "~> 2.5"},
+      # app specific dependencies
+      {:tesla, "~> 1.4"},
+      {:dart_sass, "~> 0.5.1", runtime: Mix.env() == :dev},
+      {:phoenix_live_session, "~> 0.1"},
+      {:cachex, "~> 3.6"},
+
+      # static code analysis
+      {:credo, "~> 1.6", only: [:dev, :test], runtime: false}
     ]
   end
 
@@ -67,8 +75,13 @@ defmodule Gravie.MixProject do
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
-      "assets.build": ["tailwind default", "esbuild default"],
-      "assets.deploy": ["tailwind default --minify", "esbuild default --minify", "phx.digest"]
+      "assets.build": ["tailwind default", "sass default", "esbuild default"],
+      "assets.deploy": [
+        "esbuild default --minify",
+        "sass default",
+        "tailwind default --minify",
+        "phx.digest"
+      ]
     ]
   end
 end

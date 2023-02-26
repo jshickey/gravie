@@ -17,9 +17,10 @@ defmodule Gravie.Application do
       # Start Finch
       {Finch, name: Gravie.Finch},
       # Start the Endpoint (http/https)
-      GravieWeb.Endpoint
+      GravieWeb.Endpoint,
       # Start a worker by calling: Gravie.Worker.start_link(arg)
       # {Gravie.Worker, arg}
+      {Cachex, name: :gravie_cache}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
