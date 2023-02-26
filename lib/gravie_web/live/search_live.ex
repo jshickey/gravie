@@ -3,12 +3,14 @@ defmodule GravieWeb.SearchLive do
   use GravieWeb, :live_view
 
   def mount(_params, session, socket) do
+    cart = Map.get(session, "cart", MapSet.new())
+
     socket =
       assign(socket,
         query: "",
         results: [],
         loading: false,
-        cart: MapSet.new()
+        cart: cart
       )
 
     socket =
@@ -21,7 +23,7 @@ defmodule GravieWeb.SearchLive do
 
   def render(assigns) do
     ~H"""
-   <nav
+    <nav
       class="relative flex w-full flex-wrap items-center justify-between bg-neutral-900 py-3 text-neutral-200 shadow-lg lg:flex-wrap lg:justify-start"
       data-te-navbar-ref
     >
@@ -60,7 +62,7 @@ defmodule GravieWeb.SearchLive do
           <ul class="list-style-none mr-auto flex flex-col pl-0 lg:flex-row" data-te-navbar-nav-ref>
             <li class="p-2" data-te-nav-item-ref>
               <a
-              class="p-0 text-white opacity-60 hover:opacity-80 focus:opacity-80 disabled:text-black/30 lg:px-2 [&.active]:text-black/90 dark:[&.active]:text-neutral-400"
+                class="p-0 text-white opacity-60 hover:opacity-80 focus:opacity-80 disabled:text-black/30 lg:px-2 [&.active]:text-black/90 dark:[&.active]:text-neutral-400"
                 data-te-nav-link-ref
               >
                 Search
@@ -200,7 +202,6 @@ defmodule GravieWeb.SearchLive do
         cart: updated_cart
       )
 
-    IO.inspect(socket.assigns.cart, label: "cart")
     {:noreply, socket}
   end
 
@@ -218,6 +219,7 @@ defmodule GravieWeb.SearchLive do
   end
 
   def handle_info({:live_session_updated, session}, socket) do
+    IO.inspect(session, label: "SEARCH:handle_info:live_session_updated")
     {:noreply, put_session_assigns(socket, session)}
   end
 
@@ -232,7 +234,10 @@ defmodule GravieWeb.SearchLive do
   end
 
   defp put_session_assigns(socket, session) do
-    socket
-    |> assign(:cart, Map.get(session, "cart", MapSet.new()))
+    IO.inspect(session, label: "SEARCH:put_session_assigns:session")
+    cart =  Map.get(session, "cart", MapSet.new())
+    IO.inspect(cart, label: "SEARCH:put_session_assigns:cart")
+
+    socket |> assign(:cart, cart)
   end
 end
