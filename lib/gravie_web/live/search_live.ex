@@ -3,11 +3,13 @@ defmodule GravieWeb.SearchLive do
   use GravieWeb, :live_view
 
   def mount(_params, session, socket) do
+    # The shopping cart is going to managed in global cache keyed by the session id.
+    # Multiple LiveView screens can share the same the session. The session isn't
+    # available in every LiveView function, but the cache can be called directly.
     session_id = Map.get(session, :__sid__)
-    IO.inspect(session_id, label: "SEARCH:MOUNT:SESSION_ID")
 
+    # Use the cart out of the cache if it exists, or create a new one.
     {:ok, session_cart} = Cachex.get(:gravie_cache, session_id)
-
     cart =
       if session_cart && session_id do
         session_cart
@@ -15,12 +17,11 @@ defmodule GravieWeb.SearchLive do
         MapSet.new()
       end
 
-    IO.inspect(cart, label: "SEARCH:MOUNT:CART")
-
+    # Initalize the Search screen state.
     socket =
       assign(socket,
         query: "",
-        results: [],
+        games: [],
         loading: false,
         cart: cart,
         page: 1,
@@ -171,7 +172,7 @@ defmodule GravieWeb.SearchLive do
         </div>
       </form>
 
-      <div :if={Enum.count(@results) > 0} class="grid gap-6 mb-8 md:grid-cols-2 xl:grid-cols-4">
+      <div :if={Enum.count(@games) > 0} class="grid gap-6 mb-8 md:grid-cols-2 xl:grid-cols-4">
         <div class="flex justify-center space-x-6">
           <button
             phx-click="prev-page"
@@ -186,7 +187,7 @@ defmodule GravieWeb.SearchLive do
             Next
           </button>
         </div>
-        <%= for game <- @results do %>
+        <%= for game <- @games do %>
           <div class="flex justify-center">
             <div class="flex flex-col rounded-lg bg-white shadow-lg dark:bg-neutral-700 md:max-w-xl md:flex-row">
               <img
@@ -245,7 +246,7 @@ defmodule GravieWeb.SearchLive do
   end
 
   def handle_event("add_to_cart", %{"value" => guid}, socket) do
-    game = Enum.find(socket.assigns.results, &(&1.guid == guid))
+    game = Enum.find(socket.assigns.games, &(&1.guid == guid))
 
     updated_cart = MapSet.put(socket.assigns.cart, game)
     IO.inspect(updated_cart, label: "ADD_TO_CART:UPDATED_CART:ADDING TO SESSION")
@@ -267,7 +268,7 @@ defmodule GravieWeb.SearchLive do
     socket =
       assign(socket,
         query: query,
-        results: [],
+        games: [],
         loading: true
       )
 
@@ -306,7 +307,7 @@ defmodule GravieWeb.SearchLive do
 
     socket =
       assign(socket,
-        results: api_resp.games,
+        games: api_resp.games,
         number_of_total_results: api_resp.number_of_total_results,
         loading: false
       )
