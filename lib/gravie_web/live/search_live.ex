@@ -115,6 +115,7 @@ defmodule GravieWeb.SearchLive do
 
     <div class="sm:flex sm:justify-center">Search for Games</div>
     <div class="sm:flex sm:justify-center"><%= "Results Found: #{@number_of_total_results}" %></div>
+
     <br />
 
     <div id="search">
@@ -170,7 +171,15 @@ defmodule GravieWeb.SearchLive do
         </div>
       </form>
 
-      <div class="grid gap-6 mb-8 md:grid-cols-2 xl:grid-cols-4">
+      <div :if={Enum.count(@results) > 0} class="grid gap-6 mb-8 md:grid-cols-2 xl:grid-cols-4">
+        <div class="flex justify-center space-x-6">
+          <button phx-click="prev-page" class="h-2/6	bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-l">
+            Prev
+          </button>
+          <button phx-click="next-page" class="h-2/6 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-r">
+            Next
+          </button>
+        </div>
         <%= for game <- @results do %>
           <div class="flex justify-center">
             <div class="flex flex-col rounded-lg bg-white shadow-lg dark:bg-neutral-700 md:max-w-xl md:flex-row">
@@ -200,6 +209,10 @@ defmodule GravieWeb.SearchLive do
       </div>
     </div>
     """
+  end
+
+  def handle_params(params, _uri, socket) do
+    {:noreply, socket}
   end
 
   def handle_event("add_to_cart", %{"value" => guid}, socket) do
@@ -232,8 +245,24 @@ defmodule GravieWeb.SearchLive do
     {:noreply, socket}
   end
 
+  def handle_event("prev-page", _, socket) do
+    socket =
+      assign(socket,
+        page: if @page > 1 do @page - 1 else @page end
+      )
+
+    {:noreply, socket}
+  end
+
+  def handle_event("next-page", _, socket) do
+    page = if @page <= (@number_of_total_results / 10) do @page + 1 else @page end
+    {:noreply, push_patch(socket, to: ~p"/search?query=#{@query}&page=#{page}")}
+  end
+
+
   def handle_info({:fetch_games, query}, socket) do
     api_resp = GiantBombClient.paginate(query)
+
     socket =
       assign(socket,
         results: api_resp.games,

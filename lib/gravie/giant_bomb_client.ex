@@ -13,7 +13,8 @@ defmodule Gravie.GiantBombClient do
     {:ok, result} =
       get(
         "/games/?api_key=#{@api_key}" <>
-          "&filter=name:#{query}" <> "&format=json&field_list=name,image,guid&limit=10"
+          "&filter=name:#{URI.encode(query)}" <>
+          "&format=json&field_list=name,image,guid&limit=10"
       )
 
     result.body["results"]
@@ -25,7 +26,7 @@ defmodule Gravie.GiantBombClient do
     {:ok, result} =
       get(
         "/games/?api_key=#{@api_key}" <>
-          "&filter=name:#{query}" <>
+          "&filter=name:#{URI.encode(query)}" <>
           "&format=json&field_list=name,image,guid&limit=#{page_size}&offset=#{(page - 1) * page_size}"
       )
 
