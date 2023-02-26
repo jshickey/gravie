@@ -7,9 +7,15 @@ defmodule GravieWeb.SearchLive do
     IO.inspect(session_id, label: "SEARCH:MOUNT:SESSION_ID")
 
     {:ok, session_cart} = Cachex.get(:gravie_cache, session_id)
-    cart = if session_cart && session_id do session_cart else MapSet.new() end
-    IO.inspect(cart, label: "SEARCH:MOUNT:CART")
 
+    cart =
+      if session_cart && session_id do
+        session_cart
+      else
+        MapSet.new()
+      end
+
+    IO.inspect(cart, label: "SEARCH:MOUNT:CART")
 
     socket =
       assign(socket,
