@@ -19,16 +19,16 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
 
 
 ## Files of Interest
-    * [search_live.ex](https://github.com/jshickey/gravie/blob/pagination/lib/gravie_web/live/checkout_live.ex)
-    * [checkout_live.exe](https://github.com/jshickey/gravie/blob/pagination/lib/gravie_web/live/checkout_live.ex)
-    * [giant_bomb_client.ex](https://github.com/jshickey/gravie/blob/pagination/test/gravie/giant_bomb_client_test.exs)
+* [search_live.ex](https://github.com/jshickey/gravie/blob/pagination/lib/gravie_web/live/checkout_live.ex)
+* [checkout_live.exe](https://github.com/jshickey/gravie/blob/pagination/lib/gravie_web/live/checkout_live.ex)
+* [giant_bomb_client.ex](https://github.com/jshickey/gravie/blob/pagination/test/gravie/giant_bomb_client_test.exs)
 
 ## TODOs
 * Manage Tailwind CSS better
     * encapsulate functionality in LiveView components
     * use function components
     * use @apply in app.css file
-    * [Mike Clark's combination of SASS and Tailwind](https://pragmaticstudio.com/tutorials/using-tailwind-css-in-phoenix)
+    * [Mike Clark combination of SASS and Tailwind](https://pragmaticstudio.com/tutorials/using-tailwind-css-in-phoenix)
 * Use `phx.gen context` to generato Ecto schema / Repo for customer 1->m invoices 1-> games in database
 * Use `phx.gen auth` to wire up social media authentication
 * Search Screen
