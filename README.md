@@ -28,6 +28,7 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
     * encapsulate functionality in LiveView components
     * use function components
     * use @apply in app.css file
+    * move nav bar from LiveView pages to Layouts
     * [Mike Clark combination of SASS and Tailwind](https://pragmaticstudio.com/tutorials/using-tailwind-css-in-phoenix)
 * Use `phx.gen context` to generato Ecto schema / Repo for customer 1->m invoices 1-> games in database
 * Use `phx.gen auth` to wire up social media authentication
