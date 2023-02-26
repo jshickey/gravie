@@ -173,10 +173,16 @@ defmodule GravieWeb.SearchLive do
 
       <div :if={Enum.count(@results) > 0} class="grid gap-6 mb-8 md:grid-cols-2 xl:grid-cols-4">
         <div class="flex justify-center space-x-6">
-          <button phx-click="prev-page" class="h-2/6	bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-l">
+          <button
+            phx-click="prev-page"
+            class="h-2/6	bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-l"
+          >
             Prev
           </button>
-          <button phx-click="next-page" class="h-2/6 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-r">
+          <button
+            phx-click="next-page"
+            class="h-2/6 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-r"
+          >
             Next
           </button>
         </div>
@@ -212,6 +218,29 @@ defmodule GravieWeb.SearchLive do
   end
 
   def handle_params(params, _uri, socket) do
+    IO.inspect(params, label: "SEARCH:HANDLE_PARAMS")
+
+    page =
+      if params["page"] && socket.assigns.query != "" do
+        String.to_integer(params["page"])
+      else
+        1
+      end
+
+    loading =
+      if socket.assigns.query != "" && page != socket.assigns.page do
+        send(self(), {:fetch_games, socket.assigns.query, page})
+        true
+      else
+        false
+      end
+
+    socket =
+      assign(socket,
+        page: page,
+        loading: loading
+      )
+
     {:noreply, socket}
   end
 
@@ -233,7 +262,7 @@ defmodule GravieWeb.SearchLive do
   end
 
   def handle_event("search", %{"query" => query}, socket) do
-    send(self(), {:fetch_games, query})
+    send(self(), {:fetch_games, query, socket.assigns.page})
 
     socket =
       assign(socket,
@@ -246,22 +275,34 @@ defmodule GravieWeb.SearchLive do
   end
 
   def handle_event("prev-page", _, socket) do
-    socket =
-      assign(socket,
-        page: if @page > 1 do @page - 1 else @page end
-      )
+    current_page = socket.assigns.page
 
-    {:noreply, socket}
+    page =
+      if current_page > 1 do
+        current_page - 1
+      else
+        current_page
+      end
+
+    {:noreply, push_patch(socket, to: ~p"/search?page=#{page}")}
   end
 
   def handle_event("next-page", _, socket) do
-    page = if @page <= (@number_of_total_results / 10) do @page + 1 else @page end
-    {:noreply, push_patch(socket, to: ~p"/search?query=#{@query}&page=#{page}")}
+    current_page = socket.assigns.page
+    total = socket.assigns.number_of_total_results
+
+    page =
+      if current_page <= total / 10 do
+        current_page + 1
+      else
+        current_page
+      end
+
+    {:noreply, push_patch(socket, to: ~p"/search?page=#{page}")}
   end
 
-
-  def handle_info({:fetch_games, query}, socket) do
-    api_resp = GiantBombClient.paginate(query)
+  def handle_info({:fetch_games, query, page}, socket) do
+    api_resp = GiantBombClient.paginate(query, page)
 
     socket =
       assign(socket,
