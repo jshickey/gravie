@@ -23,6 +23,8 @@ defmodule GravieWeb.SearchLive do
         results: [],
         loading: false,
         cart: cart,
+        page: 1,
+        number_of_total_results: 0,
         session_id: session_id
       )
 
@@ -112,6 +114,7 @@ defmodule GravieWeb.SearchLive do
     </nav>
 
     <div class="sm:flex sm:justify-center">Search for Games</div>
+    <div class="sm:flex sm:justify-center"><%= "Results Found: #{@number_of_total_results}" %></div>
     <br />
 
     <div id="search">
@@ -122,7 +125,7 @@ defmodule GravieWeb.SearchLive do
               <input
                 type="search"
                 name="query"
-                value=""
+                value={@query}
                 autofocus
                 autocomplete="off"
                 readonly={@loading}
@@ -230,9 +233,11 @@ defmodule GravieWeb.SearchLive do
   end
 
   def handle_info({:fetch_games, query}, socket) do
+    api_resp = GiantBombClient.paginate(query)
     socket =
       assign(socket,
-        results: GiantBombClient.search_games(query),
+        results: api_resp.games,
+        number_of_total_results: api_resp.number_of_total_results,
         loading: false
       )
 
