@@ -61,7 +61,7 @@ defmodule GravieWeb.SearchLive do
                 aria-label="Search"
                 aria-describedby="button-addon1"
               />
-              <.search_button/>
+              <.search_button />
               <.spinner loading={@loading} />
             </div>
           </div>
@@ -70,44 +70,11 @@ defmodule GravieWeb.SearchLive do
 
       <div :if={Enum.count(@games) > 0} class="grid gap-6 mb-8 md:grid-cols-2 xl:grid-cols-4">
         <div class="flex justify-center space-x-6">
-          <button
-            phx-click="prev-page"
-            class="h-2/6	bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-l"
-          >
-            Prev
-          </button>
-          <button
-            phx-click="next-page"
-            class="h-2/6 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-r"
-          >
-            Next
-          </button>
+          <.pagination_button click_event="prev-page">Prev</.pagination_button>
+          <.pagination_button click_event="next-page">Next</.pagination_button>
         </div>
         <%= for game <- @games do %>
-          <div class="flex justify-center">
-            <div class="flex flex-col rounded-lg bg-white shadow-lg dark:bg-neutral-700 md:max-w-xl md:flex-row">
-              <img
-                class=" rounded-t-m object-cover md:w-48 md:rounded-none md:rounded-l-lg"
-                src={game.thumb}
-                alt={game.name}
-              />
-              <div class="flex-1 md:w-48 flex-col justify-start p-6">
-                <h5 class="mb-2 text-xl font-medium text-neutral-800 dark:text-neutral-50">
-                  <%= game.name %>
-                </h5>
-                <button
-                  phx-click="add_to_cart"
-                  type="button"
-                  value={game.guid}
-                  class="inline-block rounded bg-primary px-6 pt-2.5 pb-2 text-xs font-medium uppercase leading-normal text-white shadow-[0_4px_9px_-4px_#3b71ca] transition duration-150 ease-in-out hover:bg-primary-600 hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:bg-primary-600 focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:outline-none focus:ring-0 active:bg-primary-700 active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)]"
-                  data-te-ripple-init
-                  data-te-ripple-color="light"
-                >
-                  Add to Cart
-                </button>
-              </div>
-            </div>
-          </div>
+          <.game_card thumb={game.thumb} name={game.name} guid={game.guid}>Add To Cart</.game_card>
         <% end %>
       </div>
     </div>
@@ -117,6 +84,8 @@ defmodule GravieWeb.SearchLive do
   def handle_params(params, _uri, socket) do
     IO.inspect(params, label: "SEARCH:HANDLE_PARAMS")
 
+    # Read the page number from the params URL. Default to page 1
+    # if there is nothing in the page and query.
     page =
       if params["page"] && socket.assigns.query != "" do
         String.to_integer(params["page"])
@@ -124,6 +93,9 @@ defmodule GravieWeb.SearchLive do
         1
       end
 
+    # Publish a message to fetch a new page of data only if the query is filled
+    # and the page has changed. Set the loading spinner to true
+    # if fetching new data.
     loading =
       if socket.assigns.query != "" && page != socket.assigns.page do
         send(self(), {:fetch_games, socket.assigns.query, page})
@@ -132,6 +104,7 @@ defmodule GravieWeb.SearchLive do
         false
       end
 
+    # Update the state of our Search page with the page number passed in on the params.
     socket =
       assign(socket,
         page: page,
@@ -141,13 +114,10 @@ defmodule GravieWeb.SearchLive do
     {:noreply, socket}
   end
 
+  # Update the shopping cart with the game selected and push to the cache
   def handle_event("add_to_cart", %{"value" => guid}, socket) do
-    game = Enum.find(socket.assigns.games, &(&1.guid == guid))
-
-    updated_cart = MapSet.put(socket.assigns.cart, game)
-    IO.inspect(updated_cart, label: "ADD_TO_CART:UPDATED_CART:ADDING TO SESSION")
-    IO.inspect(socket.assigns.session_id, label: "ADD_TO_CART:UPDATED_CART:SESSION_ID")
-
+    game_selected = Enum.find(socket.assigns.games, &(&1.guid == guid))
+    updated_cart = MapSet.put(socket.assigns.cart, game_selected)
     Cachex.put(:gravie_cache, socket.assigns.session_id, updated_cart)
 
     socket =
@@ -158,6 +128,8 @@ defmodule GravieWeb.SearchLive do
     {:noreply, socket}
   end
 
+  # Handle the clicking on the search button by publishing a message
+  # to fetch new data and start the spinner.
   def handle_event("search", %{"query" => query}, socket) do
     send(self(), {:fetch_games, query, socket.assigns.page})
 
@@ -171,6 +143,9 @@ defmodule GravieWeb.SearchLive do
     {:noreply, socket}
   end
 
+  # Calculate the previous page and patch the LiveView session,
+  # versus doing a redirect so that the page isn't
+  # re-mounted.
   def handle_event("prev-page", _, socket) do
     current_page = socket.assigns.page
 
@@ -198,6 +173,8 @@ defmodule GravieWeb.SearchLive do
     {:noreply, push_patch(socket, to: ~p"/search?page=#{page}")}
   end
 
+  # Listen for a message to fetch games and call the API client.
+  # Update the session with a list of games and turn off the spinner.
   def handle_info({:fetch_games, query, page}, socket) do
     api_resp = GiantBombClient.paginate(query, page)
 
@@ -212,21 +189,62 @@ defmodule GravieWeb.SearchLive do
   end
 
   # FUNCTION COMPONENTS
-  def spinner(assigns) do
+  def game_card(assigns) do
     ~H"""
-                  <div class="flex items-center justify-center">
-                <div
-                  :if={@loading}
-                  class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
-                  role="status"
-                >
-                  <span class="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">
-                    Loading...
-                  </span>
-                </div>
-              </div>
+    <div class="flex justify-center">
+      <div class="flex flex-col rounded-lg bg-white shadow-lg dark:bg-neutral-700 md:max-w-xl md:flex-row">
+        <img
+          class=" rounded-t-m object-cover md:w-48 md:rounded-none md:rounded-l-lg"
+          src={@thumb}
+          alt={@name}
+        />
+        <div class="flex-1 md:w-48 flex-col justify-start p-6">
+          <h5 class="mb-2 text-xl font-medium text-neutral-800 dark:text-neutral-50">
+            <%= @name %>
+          </h5>
+          <button
+            phx-click="add_to_cart"
+            type="button"
+            value={@guid}
+            class="inline-block rounded bg-primary px-6 pt-2.5 pb-2 text-xs font-medium uppercase leading-normal text-white shadow-[0_4px_9px_-4px_#3b71ca] transition duration-150 ease-in-out hover:bg-primary-600 hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:bg-primary-600 focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:outline-none focus:ring-0 active:bg-primary-700 active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)]"
+            data-te-ripple-init
+            data-te-ripple-color="light"
+          >
+            <%= render_slot(@inner_block) %>
+          </button>
+        </div>
+      </div>
+    </div>
     """
   end
+
+  def pagination_button(assigns) do
+    ~H"""
+    <button
+      phx-click={@click_event}
+      class="h-2/6	bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-l"
+    >
+      <%= render_slot(@inner_block) %>
+    </button>
+    """
+  end
+
+  def spinner(assigns) do
+    ~H"""
+    <div class="flex items-center justify-center">
+      <div
+        :if={@loading}
+        class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
+        role="status"
+      >
+        <span class="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">
+          Loading...
+        </span>
+      </div>
+    </div>
+    """
+  end
+
   def search_button(assigns) do
     ~H"""
     <button
