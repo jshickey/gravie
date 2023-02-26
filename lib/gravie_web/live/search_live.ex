@@ -2,20 +2,57 @@ defmodule GravieWeb.SearchLive do
   alias Gravie.GiantBombClient
   use GravieWeb, :live_view
 
-  def mount(_params, _session, socket) do
+  def mount(_params, session, socket) do
     socket =
       assign(socket,
         query: "",
         results: [],
-        loading: false
+        loading: false,
+        cart: MapSet.new()
       )
+
+    socket =
+      socket
+      |> PhoenixLiveSession.maybe_subscribe(session)
+      |> put_session_assigns(session)
 
     {:ok, socket}
   end
 
   def render(assigns) do
     ~H"""
-    <h1 class="sm:flex sm:justify-center">Search for Games</h1>
+    <nav
+      class="relative flex w-full flex-nowrap items-center justify-between bg-neutral-100 py-4 text-neutral-500 shadow-lg hover:text-neutral-700 focus:text-neutral-700 lg:flex-wrap lg:justify-start"
+      data-te-navbar-ref
+    >
+      <div class="flex w-full flex-wrap items-center justify-between px-6">
+        <div
+          class="!visible hidden flex-grow basis-[100%] items-center lg:!flex lg:basis-auto"
+          id="navbarSupportedContent3"
+          data-te-collapse-item
+        >
+          <a class="text-xl text-black" href="#">Gravie Games</a>
+          <!-- Left links -->
+          <ul class="list-style-none mr-auto flex flex-col pl-0 lg:flex-row" data-te-navbar-nav-ref>
+            <li class="lg:pr-2" data-te-nav-item-ref>
+              <.link
+                class="p-0 text-neutral-1500 hover:text-neutral-700 focus:text-neutral-700 disabled:text-black/30 lg:px-2 [&.active]:text-black/90 dark:[&.active]:text-neutral-400"
+                navigate={~p"/checkout"}
+                data-te-nav-link-ref
+              >
+                Checkout
+              </.link>
+            </li>
+            <li class="lg:px-2 text-neutral-400" data-te-nav-item-ref>
+              >Search
+            </li>
+          </ul>
+        </div>
+        <!-- Collapsible wrapper -->
+      </div>
+    </nav>
+
+    <div class="sm:flex sm:justify-center">Search for Games</div>
     <br />
 
     <div id="search">
@@ -85,7 +122,9 @@ defmodule GravieWeb.SearchLive do
                   <%= game.name %>
                 </h5>
                 <button
+                  phx-click="add_to_cart"
                   type="button"
+                  value={game.guid}
                   class="inline-block rounded bg-primary px-6 pt-2.5 pb-2 text-xs font-medium uppercase leading-normal text-white shadow-[0_4px_9px_-4px_#3b71ca] transition duration-150 ease-in-out hover:bg-primary-600 hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:bg-primary-600 focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:outline-none focus:ring-0 active:bg-primary-700 active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)]"
                   data-te-ripple-init
                   data-te-ripple-color="light"
@@ -101,13 +140,18 @@ defmodule GravieWeb.SearchLive do
     """
   end
 
-  def handle_info({:fetch_games, query}, socket) do
+  def handle_event("add_to_cart", %{"value" => guid}, socket) do
+    game = Enum.find(socket.assigns.results, &(&1.guid == guid))
+
+    updated_cart = MapSet.put(socket.assigns.cart, game)
+    PhoenixLiveSession.put_session(socket, "cart", updated_cart)
+
     socket =
       assign(socket,
-        results: GiantBombClient.search_games(query),
-        loading: false
+        cart: updated_cart
       )
 
+    IO.inspect(socket.assigns.cart, label: "cart")
     {:noreply, socket}
   end
 
@@ -122,5 +166,24 @@ defmodule GravieWeb.SearchLive do
       )
 
     {:noreply, socket}
+  end
+
+  def handle_info({:live_session_updated, session}, socket) do
+    {:noreply, put_session_assigns(socket, session)}
+  end
+
+  def handle_info({:fetch_games, query}, socket) do
+    socket =
+      assign(socket,
+        results: GiantBombClient.search_games(query),
+        loading: false
+      )
+
+    {:noreply, socket}
+  end
+
+  defp put_session_assigns(socket, session) do
+    socket
+    |> assign(:cart, Map.get(session, "cart", MapSet.new()))
   end
 end

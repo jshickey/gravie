@@ -19,6 +19,7 @@ defmodule GravieWeb.Router do
 
     live "/", SearchLive
     live "/search", SearchLive
+    live "/checkout", CheckoutLive
     # get "/", PageController, :home
   end
 
