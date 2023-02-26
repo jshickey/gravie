@@ -49,18 +49,7 @@ defmodule GravieWeb.SearchLive do
         <div class="flex justify-center">
           <div class="mb-3 xl:w-96">
             <div class="relative mb-4 flex w-full flex-wrap items-stretch">
-              <input
-                type="search"
-                name="query"
-                value={@query}
-                autofocus
-                autocomplete="off"
-                readonly={@loading}
-                class="relative m-0 -mr-px block w-[1%] min-w-0 flex-auto rounded-l border border-solid border-neutral-300 bg-transparent bg-clip-padding px-3 py-1.5 text-base font-normal text-neutral-700 outline-none transition duration-300 ease-in-out focus:border-primary focus:text-neutral-700 focus:shadow-te-primary focus:outline-none dark:text-neutral-200 dark:placeholder:text-neutral-200"
-                placeholder="Search"
-                aria-label="Search"
-                aria-describedby="button-addon1"
-              />
+              <.search_input query={@query} loading={@loading}/>
               <.search_button />
               <.spinner loading={@loading} />
             </div>
@@ -189,6 +178,23 @@ defmodule GravieWeb.SearchLive do
   end
 
   # FUNCTION COMPONENTS
+  def search_input(assigns) do
+    ~H"""
+    <input
+      type="search"
+      name="query"
+      value={@query}
+      autofocus
+      autocomplete="off"
+      readonly={@loading}
+      class="relative m-0 -mr-px block w-[1%] min-w-0 flex-auto rounded-l border border-solid border-neutral-300 bg-transparent bg-clip-padding px-3 py-1.5 text-base font-normal text-neutral-700 outline-none transition duration-300 ease-in-out focus:border-primary focus:text-neutral-700 focus:shadow-te-primary focus:outline-none dark:text-neutral-200 dark:placeholder:text-neutral-200"
+      placeholder="Search"
+      aria-label="Search"
+      aria-describedby="button-addon1"
+    />
+    """
+  end
+
   def game_card(assigns) do
     ~H"""
     <div class="flex justify-center">
