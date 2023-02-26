@@ -62,17 +62,7 @@ defmodule GravieWeb.SearchLive do
                 aria-describedby="button-addon1"
               />
               <.search_button/>
-              <div class="flex items-center justify-center">
-                <div
-                  :if={@loading}
-                  class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
-                  role="status"
-                >
-                  <span class="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">
-                    Loading...
-                  </span>
-                </div>
-              </div>
+              <.spinner loading={@loading} />
             </div>
           </div>
         </div>
@@ -222,6 +212,21 @@ defmodule GravieWeb.SearchLive do
   end
 
   # FUNCTION COMPONENTS
+  def spinner(assigns) do
+    ~H"""
+                  <div class="flex items-center justify-center">
+                <div
+                  :if={@loading}
+                  class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
+                  role="status"
+                >
+                  <span class="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">
+                    Loading...
+                  </span>
+                </div>
+              </div>
+    """
+  end
   def search_button(assigns) do
     ~H"""
     <button
