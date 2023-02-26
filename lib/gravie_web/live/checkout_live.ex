@@ -2,8 +2,12 @@ defmodule GravieWeb.CheckoutLive do
   use GravieWeb, :live_view
 
   def mount(_params, session, socket) do
+    # The shopping cart is going to managed in global cache keyed by the session id.
+    # Multiple LiveView screens can share the same the session. The session isn't
+    # available in every LiveView function, but the cache can be called directly.
     session_id = Map.get(session, :__sid__)
-    IO.inspect(session_id, label: "SEARCH:MOUNT:SESSION_ID")
+
+    # Use the cart out of the cache if it exists, or create a new one.
     {:ok, session_cart} = Cachex.get(:gravie_cache, session_id)
 
     cart =
@@ -12,8 +16,6 @@ defmodule GravieWeb.CheckoutLive do
       else
         MapSet.new()
       end
-
-    IO.inspect(cart, label: "CHECKOUT:MOUNT:CART_FROM_SESSION")
 
     socket =
       assign(socket,
@@ -25,6 +27,76 @@ defmodule GravieWeb.CheckoutLive do
   end
 
   def render(assigns) do
+    ~H"""
+    <.nav><%= MapSet.size(@cart) %></.nav>
+    <h2>SHOPPING CART:</h2>
+    <div>
+      <div :if={MapSet.size(@cart) == 0}>Shopping Cart is Empty</div>
+      <div :if={@cart} class="grid gap-6 mb-8 md:grid-cols-2 xl:grid-cols-4">
+        <%= for game <- @cart do %>
+          <.game_card
+            thumb={game.thumb}
+            name={game.name}
+            guid={game.guid}
+            event_name="remove_from_cart"
+          >
+            Remove From Cart
+          </.game_card>
+        <% end %>
+      </div>
+    </div>
+    """
+  end
+
+  def handle_event("remove_from_cart", %{"value" => guid}, socket) do
+    game = Enum.find(socket.assigns.cart, &(&1.guid == guid))
+    updated_cart = MapSet.delete(socket.assigns.cart, game)
+
+    IO.inspect(updated_cart, label: "CHECKOUT:remove_from_cart:updated_cart")
+
+    Cachex.put(:gravie_cache, socket.assigns.session_id, updated_cart)
+    IO.puts("done with updating Cachex.cache")
+
+    socket =
+      assign(socket,
+        cart: updated_cart
+      )
+
+    IO.inspect(socket.assigns.cart, label: "cart")
+    {:noreply, socket}
+  end
+
+  # Function Components
+  def game_card(assigns) do
+    ~H"""
+    <div class="flex justify-center">
+      <div class="flex flex-col rounded-lg bg-white shadow-lg dark:bg-neutral-700 md:max-w-xl md:flex-row">
+        <img
+          class=" rounded-t-m object-cover md:w-48 md:rounded-none md:rounded-l-lg"
+          src={@thumb}
+          alt={@name}
+        />
+        <div class="flex-1 md:w-48 flex-col justify-start p-6">
+          <h5 class="mb-2 text-xl font-medium text-neutral-800 dark:text-neutral-50">
+            <%= @name %>
+          </h5>
+          <button
+            phx-click={@event_name}
+            type="button"
+            value={@guid}
+            class="inline-block rounded bg-primary px-6 pt-2.5 pb-2 text-xs font-medium uppercase leading-normal text-white shadow-[0_4px_9px_-4px_#3b71ca] transition duration-150 ease-in-out hover:bg-primary-600 hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:bg-primary-600 focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:outline-none focus:ring-0 active:bg-primary-700 active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)]"
+            data-te-ripple-init
+            data-te-ripple-color="light"
+          >
+            <%= render_slot(@inner_block) %>
+          </button>
+        </div>
+      </div>
+    </div>
+    """
+  end
+
+  def nav(assigns) do
     ~H"""
     <nav
       class="relative flex w-full flex-wrap items-center justify-between bg-neutral-900 py-3 text-neutral-200 shadow-lg lg:flex-wrap lg:justify-start"
@@ -98,64 +170,13 @@ defmodule GravieWeb.CheckoutLive do
               >
                 <path d="M2.25 2.25a.75.75 0 000 1.5h1.386c.17 0 .318.114.362.278l2.558 9.592a3.752 3.752 0 00-2.806 3.63c0 .414.336.75.75.75h15.75a.75.75 0 000-1.5H5.378A2.25 2.25 0 017.5 15h11.218a.75.75 0 00.674-.421 60.358 60.358 0 002.96-7.228.75.75 0 00-.525-.965A60.864 60.864 0 005.68 4.509l-.232-.867A1.875 1.875 0 003.636 2.25H2.25zM3.75 20.25a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0zM16.5 20.25a1.5 1.5 0 113 0 1.5 1.5 0 01-3 0z" />
               </svg>
-              <%= if @cart do
-                MapSet.size(@cart)
-              end %>
+              <%= render_slot(@inner_block) %>
             </span>
           </a>
         </div>
         <!-- Right elements -->
       </div>
     </nav>
-
-    <div>
-      <div :if={@cart} class="grid gap-6 mb-8 md:grid-cols-2 xl:grid-cols-4">
-        <%= for game <- @cart do %>
-          <div class="flex justify-center">
-            <div class="flex flex-col rounded-lg bg-white shadow-lg dark:bg-neutral-700 md:max-w-xl md:flex-row">
-              <img
-                class=" rounded-t-m object-cover md:w-48 md:rounded-none md:rounded-l-lg"
-                src={game.thumb}
-                alt={game.name}
-              />
-              <div class="flex-1 md:w-48 flex-col justify-start p-6">
-                <h5 class="mb-2 text-xl font-medium text-neutral-800 dark:text-neutral-50">
-                  <%= game.name %>
-                </h5>
-                <button
-                  phx-click="remove_from_cart"
-                  type="button"
-                  value={game.guid}
-                  class="inline-block rounded bg-primary px-6 pt-2.5 pb-2 text-xs font-medium uppercase leading-normal text-white shadow-[0_4px_9px_-4px_#3b71ca] transition duration-150 ease-in-out hover:bg-primary-600 hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:bg-primary-600 focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:outline-none focus:ring-0 active:bg-primary-700 active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)]"
-                  data-te-ripple-init
-                  data-te-ripple-color="light"
-                >
-                  Remove From Cart
-                </button>
-              </div>
-            </div>
-          </div>
-        <% end %>
-      </div>
-    </div>
     """
-  end
-
-  def handle_event("remove_from_cart", %{"value" => guid}, socket) do
-    game = Enum.find(socket.assigns.cart, &(&1.guid == guid))
-    updated_cart = MapSet.delete(socket.assigns.cart, game)
-
-    IO.inspect(updated_cart, label: "CHECKOUT:remove_from_cart:updated_cart")
-
-    Cachex.put(:gravie_cache, socket.assigns.session_id, updated_cart)
-    IO.puts("done with updating Cachex.cache")
-
-    socket =
-      assign(socket,
-        cart: updated_cart
-      )
-
-    IO.inspect(socket.assigns.cart, label: "cart")
-    {:noreply, socket}
   end
 end
