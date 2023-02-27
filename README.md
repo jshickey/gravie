@@ -11,8 +11,6 @@
     * use @apply in app.css file
     * move nav bar from LiveView pages to Layouts
     * [Mike Clark combination of SASS and Tailwind](https://pragmaticstudio.com/tutorials/using-tailwind-css-in-phoenix)
-* Use `phx.gen context` to generato Ecto schema / Repo for customer 1->m invoices 1-> games in database
-* Use `phx.gen auth` to wire up social media authentication
 * Search Screen
     * fresh queries don't reset the page parameter in the URL
     * add query to URL so that queries could be bookmarked
@@ -21,9 +19,6 @@
     * display flash message that no results were found
     * display flash message when API server is down
     * hover over shopping cart should display cart contents
-* Checkout Screen
-    * utilize Phoenix smart forms based off Ecto schemas
-    * add checkout button to save to the database
 * API Client
     * error handling for API calls that fail
 * Shopping Cart
