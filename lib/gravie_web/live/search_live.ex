@@ -120,16 +120,18 @@ defmodule GravieWeb.SearchLive do
   # Handle the clicking on the search button by publishing a message
   # to fetch new data and start the spinner.
   def handle_event("search", %{"query" => query}, socket) do
-    send(self(), {:fetch_games, query, socket.assigns.page})
+    send(self(), {:fetch_games, query, 1})
 
     socket =
       assign(socket,
         query: query,
         games: [],
-        loading: true
+        loading: true,
+        page: 1
       )
+    {:noreply, push_patch(socket, to: ~p"/search")}
 
-    {:noreply, socket}
+    #{:noreply, socket}
   end
 
   # Calculate the previous page and patch the LiveView session,
