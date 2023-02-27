@@ -62,7 +62,7 @@ defmodule GravieWeb.CheckoutLive do
     updated_cart = MapSet.delete(socket.assigns.cart, game)
     Cachex.put(:gravie_cache, socket.assigns.session_id, updated_cart)
 
-    {:noreply, assign( socket, cart: updated_cart )}
+    {:noreply, assign(socket, cart: updated_cart)}
   end
 
   # Function Components
