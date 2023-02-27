@@ -56,22 +56,13 @@ defmodule GravieWeb.CheckoutLive do
     """
   end
 
+  # Delete the selected game from the shopping cart and push to the cache
   def handle_event("remove_from_cart", %{"value" => guid}, socket) do
     game = Enum.find(socket.assigns.cart, &(&1.guid == guid))
     updated_cart = MapSet.delete(socket.assigns.cart, game)
-
-    IO.inspect(updated_cart, label: "CHECKOUT:remove_from_cart:updated_cart")
-
     Cachex.put(:gravie_cache, socket.assigns.session_id, updated_cart)
-    IO.puts("done with updating Cachex.cache")
 
-    socket =
-      assign(socket,
-        cart: updated_cart
-      )
-
-    IO.inspect(socket.assigns.cart, label: "cart")
-    {:noreply, socket}
+    {:noreply, assign( socket, cart: updated_cart )}
   end
 
   # Function Components
@@ -107,8 +98,14 @@ defmodule GravieWeb.CheckoutLive do
   def handle_event("cart-checkout", %{"email" => email}, socket) do
     socket.assigns.cart
     |> Enum.map(&Rentals.create_rental(%{email: email, game_guid: &1.guid}))
-    socket = socket
-    |> put_flash(:info, "Rating submitted successfully")
+
+    Cachex.put(:gravie_cache, socket.assigns.session_id, MapSet.new())
+
+    socket =
+      socket
+      |> put_flash(:info, "Rentals saved successfully")
+      |> assign(cart: MapSet.new())
+
     {:noreply, socket}
   end
 
