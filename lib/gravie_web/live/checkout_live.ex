@@ -1,5 +1,6 @@
 defmodule GravieWeb.CheckoutLive do
   use GravieWeb, :live_view
+  alias Gravie.Rentals
 
   def mount(_params, session, socket) do
     # The shopping cart is going to managed in global cache keyed by the session id.
@@ -31,6 +32,13 @@ defmodule GravieWeb.CheckoutLive do
     <.nav><%= MapSet.size(@cart) %></.nav>
     <h2>SHOPPING CART:</h2>
     <div>
+      <form phx-submit="cart-checkout">
+        <label for="email">Email:</label>
+        <input type="text" id="email" name="email" />
+        <button class="bg-neutral-300" type="Submit">Rent Now</button>
+      </form>
+    </div>
+    <div>
       <div :if={MapSet.size(@cart) == 0}>Shopping Cart is Empty</div>
       <div :if={@cart} class="grid gap-6 mb-8 md:grid-cols-2 xl:grid-cols-4">
         <%= for game <- @cart do %>
@@ -48,22 +56,13 @@ defmodule GravieWeb.CheckoutLive do
     """
   end
 
+  # Delete the selected game from the shopping cart and push to the cache
   def handle_event("remove_from_cart", %{"value" => guid}, socket) do
     game = Enum.find(socket.assigns.cart, &(&1.guid == guid))
     updated_cart = MapSet.delete(socket.assigns.cart, game)
-
-    IO.inspect(updated_cart, label: "CHECKOUT:remove_from_cart:updated_cart")
-
     Cachex.put(:gravie_cache, socket.assigns.session_id, updated_cart)
-    IO.puts("done with updating Cachex.cache")
 
-    socket =
-      assign(socket,
-        cart: updated_cart
-      )
-
-    IO.inspect(socket.assigns.cart, label: "cart")
-    {:noreply, socket}
+    {:noreply, assign(socket, cart: updated_cart)}
   end
 
   # Function Components
@@ -84,7 +83,7 @@ defmodule GravieWeb.CheckoutLive do
             phx-click={@event_name}
             type="button"
             value={@guid}
-            class="inline-block rounded bg-primary px-6 pt-2.5 pb-2 text-xs font-medium uppercase leading-normal text-white shadow-[0_4px_9px_-4px_#3b71ca] transition duration-150 ease-in-out hover:bg-primary-600 hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:bg-primary-600 focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:outline-none focus:ring-0 active:bg-primary-700 active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)]"
+            class="inline-block rounded bg-neutral-500 px-6 pt-2.5 pb-2 text-xs font-medium uppercase leading-normal text-white shadow-[0_4px_9px_-4px_#3b71ca] transition duration-150 ease-in-out hover:bg-primary-600 hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:bg-primary-600 focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:outline-none focus:ring-0 active:bg-primary-700 active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)]"
             data-te-ripple-init
             data-te-ripple-color="light"
           >
@@ -94,6 +93,33 @@ defmodule GravieWeb.CheckoutLive do
       </div>
     </div>
     """
+  end
+
+  def handle_event("cart-checkout", %{"email" => email}, socket) do
+    socket.assigns.cart
+    |> Enum.map(&Rentals.create_rental(%{email: email, game_guid: &1.guid}))
+
+    Cachex.put(:gravie_cache, socket.assigns.session_id, MapSet.new())
+
+    socket =
+      socket
+      |> put_flash(:info, "Rentals saved successfully")
+      |> assign(cart: MapSet.new())
+
+    {:noreply, socket}
+  end
+
+  def handle_event("remove_from_cart", %{"value" => guid}, socket) do
+    game = Enum.find(socket.assigns.cart, &(&1.guid == guid))
+    updated_cart = MapSet.delete(socket.assigns.cart, game)
+    Cachex.put(:gravie_cache, socket.assigns.session_id, updated_cart)
+
+    socket =
+      assign(socket,
+        cart: updated_cart
+      )
+
+    {:noreply, socket}
   end
 
   def nav(assigns) do
