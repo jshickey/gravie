@@ -227,7 +227,7 @@ defmodule GravieWeb.SearchLive do
   def pagination_button(assigns) do
     ~H"""
     <button
-      phx-submit={@click_event}
+      phx-click={@click_event}
       class="h-2/6	bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-l"
     >
       <%= render_slot(@inner_block) %>
