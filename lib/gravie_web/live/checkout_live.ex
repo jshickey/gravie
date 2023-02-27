@@ -112,18 +112,13 @@ defmodule GravieWeb.CheckoutLive do
   def handle_event("remove_from_cart", %{"value" => guid}, socket) do
     game = Enum.find(socket.assigns.cart, &(&1.guid == guid))
     updated_cart = MapSet.delete(socket.assigns.cart, game)
-
-    IO.inspect(updated_cart, label: "CHECKOUT:remove_from_cart:updated_cart")
-
     Cachex.put(:gravie_cache, socket.assigns.session_id, updated_cart)
-    IO.puts("done with updating Cachex.cache")
 
     socket =
       assign(socket,
         cart: updated_cart
       )
 
-    IO.inspect(socket.assigns.cart, label: "cart")
     {:noreply, socket}
   end
 
