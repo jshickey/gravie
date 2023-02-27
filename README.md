@@ -1,23 +1,5 @@
 # Gravie Test Project
 
-To start your Phoenix server:
-
-  * Run `mix setup` to install and setup dependencies
-  * Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
-
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
-
-Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
-
-## Learn more
-
-  * Official website: https://www.phoenixframework.org/
-  * Guides: https://hexdocs.pm/phoenix/overview.html
-  * Docs: https://hexdocs.pm/phoenix
-  * Forum: https://elixirforum.com/c/phoenix-forum
-  * Source: https://github.com/phoenixframework/phoenix
-
-
 ## Files of Interest
 * [search_live.ex](https://github.com/jshickey/gravie/blob/pagination/lib/gravie_web/live/checkout_live.ex)
 * [checkout_live.exe](https://github.com/jshickey/gravie/blob/pagination/lib/gravie_web/live/checkout_live.ex)
@@ -67,4 +49,23 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
 * requires deploying servers, scales vertically first, then horizontally
 * requires sockets, live connection to servers
 * requires discipline - modular monolith
+
+
+## MISC
+### ECTO Notes
+`mix phx.gen.schema Rental rentals email:string game_guid:string` \
+`mix ecto.migrate` \
+`psql -U postgres` \
+`\connect gravie_dev` \
+`\d` 
+
+```
+                List of relations
+ Schema |       Name        |   Type   |  Owner   
+--------+-------------------+----------+----------
+ public | rentals           | table    | postgres
+ public | rentals_id_seq    | sequence | postgres
+ public | schema_migrations | table    | postgres
+(3 rows)
+```
 

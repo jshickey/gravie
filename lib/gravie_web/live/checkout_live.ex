@@ -1,5 +1,6 @@
 defmodule GravieWeb.CheckoutLive do
   use GravieWeb, :live_view
+  alias Gravie.Rentals
 
   def mount(_params, session, socket) do
     # The shopping cart is going to managed in global cache keyed by the session id.
@@ -69,6 +70,13 @@ defmodule GravieWeb.CheckoutLive do
   # Function Components
   def game_card(assigns) do
     ~H"""
+    <div>
+      <form phx-submit="cart-checkout">
+        <label for="email">Email:</label>
+        <input type="text" id="email" name="email" />
+        <button type="Submit">Rent Now</button>
+      </form>
+    </div>
     <div class="flex justify-center">
       <div class="flex flex-col rounded-lg bg-white shadow-lg dark:bg-neutral-700 md:max-w-xl md:flex-row">
         <img
@@ -94,6 +102,13 @@ defmodule GravieWeb.CheckoutLive do
       </div>
     </div>
     """
+  end
+
+  def handle_event("cart-checkout", %{"email" => email}, socket) do
+    socket.assigns.cart
+    |> Enum.map(&Rentals.create_rental(%{email: email, game_guid: &1.guid}))
+
+    {:noreply, socket}
   end
 
   def nav(assigns) do
